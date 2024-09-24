@@ -41,5 +41,8 @@ WORKDIR /app
 ENV CHROME_DRIVER_PATH=/usr/local/bin/chromedriver
 ENV DISPLAY=:99
 
+# Copy the scrapper code to container
+COPY scrapper.py /app/
+
 # Default command
 CMD ["bash"]
