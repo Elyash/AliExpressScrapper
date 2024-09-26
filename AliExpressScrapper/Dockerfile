@@ -32,7 +32,7 @@ RUN wget -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapi
     chmod +x /usr/local/bin/chromedriver
 
 # Install Selenium and ipython
-RUN pip install selenium webdriver-manager ipython
+RUN pip install selenium webdriver-manager pymongo ipython
 
 # Set up the working directory
 WORKDIR /app
@@ -45,4 +45,4 @@ ENV DISPLAY=:99
 COPY scrapper.py /app/
 
 # Default command
-CMD ["bash"]
+CMD ["python", "./scrapper.py"]

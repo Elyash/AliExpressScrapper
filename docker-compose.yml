@@ -30,6 +30,8 @@ services:
     container_name: aliexpressscrapper
     depends_on:
       - mongo
+    ports:
+      - "7777:7777"
 
 volumes:
   mongo-data:
