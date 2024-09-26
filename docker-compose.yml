@@ -24,6 +24,16 @@ services:
     ports:
       - "8081:8081"
 
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ default port
+      - "15672:15672"  # RabbitMQ management interface
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
   aliexpressscrapper:
     build:
       context: ./AliExpressScrapper
@@ -31,7 +41,7 @@ services:
     depends_on:
       - mongo
     ports:
-      - "7777:7777"
+      - "7777:7777" # Just to be in the same netwoek
 
 volumes:
   mongo-data:

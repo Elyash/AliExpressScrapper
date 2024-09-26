@@ -1,8 +1,9 @@
-#!/usr/bin/python
 """Main AliExpress scrapper module."""
 
 import time
 
+import pika
+import pika.credentials
 from pymongo import MongoClient
 
 from selenium import webdriver
@@ -43,6 +44,7 @@ class AliExpressScrapper:
         """Get details about the product by scrapping its web page."""
 
         product_details = dict()
+        product_details['product_link'] = url
 
         # Go to the AliExpress product page (replace with the product URL)
         self.__driver__.get(url)
@@ -100,15 +102,53 @@ class MongoDBInterface:
         self.__client__['MyFullstackProject']['Gifts'].insert_one(gift_details) # TODO: check the reutrn value 
 
 
+class RabbitMQReactor:
+    """A reactor that consuming from RabbitMQ and store in mongoDB."""
+
+    def __init__(self, scrapper, mongo_dbi) -> None:
+        
+        # Connect to RabbitMQ
+        connection_params = pika.ConnectionParameters(
+            host='rabbitmq',
+            port=5672,
+            credentials=pika.PlainCredentials(
+                username='user', password='password'
+            )
+        )
+        connection = pika.BlockingConnection(connection_params)
+        self.__channel__ = connection.channel()
+
+        self.__scrapper__ = scrapper
+        self.__mongo_dbi__ = mongo_dbi
+
+        # Declare the queue (make sure the queue exists)
+        self.__channel__.queue_declare(queue='links_queue')
+
+        self.__channel__.basic_consume(
+            queue='links_queue', on_message_callback=self.process_link, auto_ack=True
+        )
+
+    def process_link(self, ch, method, properties, body):
+        """A callback upon each message in the links queue."""
+
+        data = body.decode()
+
+        gift = self.__scrapper__.scrape_product(data)
+        self.__mongo_dbi__.store_gift(gift)
+
+        print(gift)
+
+    def loop(self):
+        """Consuming and proccessing loop."""
+
+        self.__channel__.start_consuming()
+
+
 # Usage axample
 if __name__ == '__main__':
-    example_url = 'https://he.aliexpress.com/item/1005005956410553.html?spm=a2g0o.best.moretolove.2.225c216f6uZIzX&_gl=1*sq3u1s*_gcl_aw*R0NMLjE3MjEyMzcyMjMuQ2p3S0NBancxOTIwQmhBM0Vpd0FKVDNsU2JTeVVqV0dKc05YQzZEWE5GbGZlQ3pUTUZBVDhBZHl1YUJJNXR1bzVuTXV2V3lTUlo4cGNob0N6MGdRQXZEX0J3RQ..*_gcl_dc*R0NMLjE3MjEyMzcyMjMuQ2p3S0NBancxOTIwQmhBM0Vpd0FKVDNsU2JTeVVqV0dKc05YQzZEWE5GbGZlQ3pUTUZBVDhBZHl1YUJJNXR1bzVuTXV2V3lTUlo4cGNob0N6MGdRQXZEX0J3RQ..*_gcl_au*MTk1NTk3NDA2My4xNzI3MDk5Nzcz*_ga*NzI1NjAxMTM1LjE2ODA4MDkyNDg.*_ga_VED1YSGNC7*MTcyNzE4MTU0MC4yMS4xLjE3MjcxODE1NzEuMjkuMC4w&gatewayAdapt=glo2isr'
+    #example_url = 'https://he.aliexpress.com/item/1005005956410553.html?spm=a2g0o.best.moretolove.2.225c216f6uZIzX&_gl=1*sq3u1s*_gcl_aw*R0NMLjE3MjEyMzcyMjMuQ2p3S0NBancxOTIwQmhBM0Vpd0FKVDNsU2JTeVVqV0dKc05YQzZEWE5GbGZlQ3pUTUZBVDhBZHl1YUJJNXR1bzVuTXV2V3lTUlo4cGNob0N6MGdRQXZEX0J3RQ..*_gcl_dc*R0NMLjE3MjEyMzcyMjMuQ2p3S0NBancxOTIwQmhBM0Vpd0FKVDNsU2JTeVVqV0dKc05YQzZEWE5GbGZlQ3pUTUZBVDhBZHl1YUJJNXR1bzVuTXV2V3lTUlo4cGNob0N6MGdRQXZEX0J3RQ..*_gcl_au*MTk1NTk3NDA2My4xNzI3MDk5Nzcz*_ga*NzI1NjAxMTM1LjE2ODA4MDkyNDg.*_ga_VED1YSGNC7*MTcyNzE4MTU0MC4yMS4xLjE3MjcxODE1NzEuMjkuMC4w&gatewayAdapt=glo2isr'
 
     scrapper = AliExpressScrapper()
     gifts_dbi = MongoDBInterface()
-
-    gift = scrapper.scrape_product(example_url)
-    gifts_dbi.store_gift(gift)
-    print(gift)
-
-    time.sleep(100000)
+    
+    RabbitMQReactor(scrapper, gifts_dbi).loop()

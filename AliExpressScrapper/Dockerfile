@@ -32,7 +32,7 @@ RUN wget -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapi
     chmod +x /usr/local/bin/chromedriver
 
 # Install Selenium and ipython
-RUN pip install selenium webdriver-manager pymongo ipython
+RUN pip install selenium webdriver-manager pymongo pika ipython
 
 # Set up the working directory
 WORKDIR /app
