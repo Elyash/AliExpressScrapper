@@ -56,6 +56,26 @@ class AliExpressScrapper:
         except exceptions.NoSuchElementException as e:
             print('Element not found:', e)
 
+        # Extract the product price
+        try:
+            product_details['product_price'] = self.__driver__.find_element(
+                By.XPATH, "//div[@class='price--current--I3Zeidd product-price-current']"
+            ).text
+        except exceptions.InvalidSelectorException as e:
+            print('Invalid class name:', e)
+        except exceptions.NoSuchElementException as e:
+            print('Element not found:', e)
+
+        # Extract the product main image
+        try:
+            product_details['product_main_image'] = self.__driver__.find_element(
+                By.XPATH, "//img[@class='magnifier--image--EYYoSlr magnifier--zoom--RzRJGZg']"
+            ).get_attribute('src')
+        except exceptions.InvalidSelectorException as e:
+            print('Invalid class name:', e)
+        except exceptions.NoSuchElementException as e:
+            print('Element not found:', e)
+
         return product_details
 
 # Usage axample
