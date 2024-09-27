@@ -40,9 +40,9 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
-    # TODO: refactor this.
+    # This is a strange way but this is how flask_login works..
     @login_manager.user_loader
-    def load_user(email):
+    def load_user(email: str):
         return users_dbi.fetch_user(email)
 
     return app

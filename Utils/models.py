@@ -2,6 +2,10 @@
 
 import dataclasses
 
+import bson
+
+import flask_login
+
 # TODO: work not with aliexpress pages
 @dataclasses.dataclass
 class Gift:
@@ -9,27 +13,33 @@ class Gift:
 
     name: str # Primary key
     link: str | None
-    description: str | None
-    images: list[str] # Main image in images[0]
     price: int | None
     email: str # The email of the user the gift belongs
-
+    description: str | None = None
+    images: list[str] | None = None # Main image in images[0]
 
 @dataclasses.dataclass
 class GiftRequest:
     """Link for gift and the user's email."""
 
-    link: str | None
+    link: str
     email: str # The email of the user the gift belongs
 
 
 @dataclasses.dataclass
-class User:
+class User(flask_login.UserMixin):
     """A user in the gift app."""
 
+    _id: bson.ObjectId  # For flask_login usage
     email: str # Primary key
     first_name: str
     password: str
+    _id: bson.ObjectId  # For flask_login usage
+
+    def get_id(self) -> bson.ObjectId | None:
+        """Gets the user flask_login ID."""
+
+        return self._id
 
 
 class UserNotExistsException(Exception):

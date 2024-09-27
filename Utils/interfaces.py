@@ -50,22 +50,12 @@ class UsersMongoDBI(MongoDBI):
 
         self.store(UsersMongoDBI.COLLECTION_NAME, dataclasses.asdict(user))
 
-    def fetch_user(self, email: str) -> models.User:
+    def fetch_user(self, email: str) -> models.User | None:
         """Fetch a user details be email."""
 
-        return models.User(
-            **(super().fetch(UsersMongoDBI.COLLECTION_NAME, 'email', email))
-        )
+        fetched_user = super().fetch(UsersMongoDBI.COLLECTION_NAME, 'email', email)
 
-    def validate_user(self, user: models.User) -> bool:
-        """Validate the user exists and the password is correct."""
-
-        fetched_user = self.fetch_user(user)
-
-        if fetched_user is None:
-            raise models.UserNotExistsException(user)
-
-        return user == fetched_user
+        return models.User(**fetched_user) if fetched_user else None
 
 
 class GiftsMongoDBI(MongoDBI):
