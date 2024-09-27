@@ -1,7 +1,5 @@
 """Main package."""
 
-from . import models
-from . import interfaces
+import website
 
-from .website import views
-from .website import auth
+from . import app

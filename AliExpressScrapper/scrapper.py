@@ -1,10 +1,14 @@
-"""Main AliExpress scrapper module."""
+"""This module is responsible about the scrapping process.
+It gets a GiftRequest message from gift_requests RabbitMQ ->
+It scrapes the data from the web page into Gift new class ->
+It stores the gift in MongoDB ->
+It sends back the GiftRequest to scrapped_gifts queue. 
+"""
 
+import json
 import time
 
 import pika
-
-from pymongo import MongoClient
 
 from selenium import webdriver
 from selenium.common import exceptions
@@ -12,6 +16,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+
+from ..Utils import interfaces, models
 
 
 class AliExpressScrapper:
@@ -39,21 +45,20 @@ class AliExpressScrapper:
         # Close the WebDriver
         self.__driver__.quit()
 
-    def scrape_product(self, url: str) -> dict[str, str]:
+    def scrape_product(self, gift_request: models.GiftRequest) -> models.Gift:
         """Get details about the product by scrapping its web page."""
 
-        product_details = dict()
-        product_details['product_link'] = url
+        gift_details = dict()
 
         # Go to the AliExpress product page (replace with the product URL)
-        self.__driver__.get(url)
+        self.__driver__.get(gift_request.link)
 
         # Wait for the page to fully load
         time.sleep(2)  # Adjust this based on your network speed
 
-        # Extract the product title
+        # Extract the gift title
         try:
-            product_details['product_title'] = self.__driver__.find_element(
+            gift_details['gift_name'] = self.__driver__.find_element(
                 By.CLASS_NAME, 'title--wrap--UUHae_g'
             ).text
         except exceptions.InvalidSelectorException as e:
@@ -63,7 +68,7 @@ class AliExpressScrapper:
 
         # Extract the product price
         try:
-            product_details['product_price'] = self.__driver__.find_element(
+            gift_details['gift_price'] = self.__driver__.find_element(
                 By.XPATH, "//div[@class='price--current--I3Zeidd product-price-current']"
             ).text
         except exceptions.InvalidSelectorException as e:
@@ -71,83 +76,63 @@ class AliExpressScrapper:
         except exceptions.NoSuchElementException as e:
             print('Element not found:', e)
 
-        # Extract the product main image
+        # Extract the product main image, TODO: Extract all images.
         try:
-            product_details['product_main_image'] = self.__driver__.find_element(
+            gift_details['gift_images'] = list()
+            gift_details['gift_images'].append(self.__driver__.find_element(
                 By.XPATH, "//img[@class='magnifier--image--EYYoSlr magnifier--zoom--RzRJGZg']"
-            ).get_attribute('src')
+            ).get_attribute('src'))
         except exceptions.InvalidSelectorException as e:
             print('Invalid class name:', e)
         except exceptions.NoSuchElementException as e:
             print('Element not found:', e)
 
-        return product_details
-
-
-class MongoDBInterface:
-    """An interface to connect with mongoDB."""
-
-    def __init__(self):
-        self.__client__ = MongoClient(
-            "mongodb", port=27017, username='admin', password='password'
+        return models.Gift(
+            name=gift_details['gift_name'],
+            link=gift_request.link,
+            description='', # TODO: add scrapping description
+            images=gift_details['gift_images'],
+            price=gift_details['gift_price'],
+            email=gift_request.email
         )
 
-    def __del__(self):
-        self.__client__.close()
 
-    def store_gift(self, gift_details):
-        """Store a gift in the Gifts DB."""
-
-        self.__client__['MyFullstackProject']['Gifts'].insert_one(gift_details) # TODO: check the reutrn value 
-
-
-class RabbitMQReactor:
+class GiftRequestsConsumerReactor(interfaces.ConsumerReactorRabbitMQI):
     """A reactor that consuming from RabbitMQ and store in mongoDB."""
 
     def __init__(self, scrapper, mongo_dbi) -> None:
-        
-        # Connect to RabbitMQ
-        connection_params = pika.ConnectionParameters(
-            host='rabbitmq',
-            port=5672,
-            credentials=pika.PlainCredentials(
-                username='user', password='password'
-            )
-        )
-        connection = pika.BlockingConnection(connection_params)
-        self.__channel__ = connection.channel()
+        super().__init__()
 
         self.__scrapper__ = scrapper
         self.__mongo_dbi__ = mongo_dbi
 
         # Declare the queue (make sure the queue exists)
-        self.__channel__.queue_declare(queue='links_queue')
+        self.__channel__.queue_declare(queue='gift_requests_queue')
 
         self.__channel__.basic_consume(
-            queue='links_queue', on_message_callback=self.process_link, auto_ack=True
+            queue='gift_requests_queue', on_message_callback=self.handler, auto_ack=True
         )
 
-    def process_link(self, ch, method, properties, body):
-        """A callback upon each message in the links queue."""
+    def handler(self, ch, method, properties, body):
+        """A callback upon each new gift request in queue."""
 
-        data = body.decode()
+        gift_request = models.GiftRequest(**json.loads(body))
 
-        gift = self.__scrapper__.scrape_product(data)
+        gift = self.__scrapper__.scrape_product(gift_request)
         self.__mongo_dbi__.store_gift(gift)
 
-        print(gift)
+        self.__channel__.basic_publish(
+            exchange='', routing_key='scrapped_gifts_queue', body=body
+        ) # TODO: make this OOP
 
-    def loop(self):
-        """Consuming and proccessing loop."""
-
-        self.__channel__.start_consuming()
+        print(gift) # TODO: remove this and add a lot of logging messages.
 
 
 # Usage axample
 if __name__ == '__main__':
     #example_url = 'https://he.aliexpress.com/item/1005005956410553.html?spm=a2g0o.best.moretolove.2.225c216f6uZIzX&_gl=1*sq3u1s*_gcl_aw*R0NMLjE3MjEyMzcyMjMuQ2p3S0NBancxOTIwQmhBM0Vpd0FKVDNsU2JTeVVqV0dKc05YQzZEWE5GbGZlQ3pUTUZBVDhBZHl1YUJJNXR1bzVuTXV2V3lTUlo4cGNob0N6MGdRQXZEX0J3RQ..*_gcl_dc*R0NMLjE3MjEyMzcyMjMuQ2p3S0NBancxOTIwQmhBM0Vpd0FKVDNsU2JTeVVqV0dKc05YQzZEWE5GbGZlQ3pUTUZBVDhBZHl1YUJJNXR1bzVuTXV2V3lTUlo4cGNob0N6MGdRQXZEX0J3RQ..*_gcl_au*MTk1NTk3NDA2My4xNzI3MDk5Nzcz*_ga*NzI1NjAxMTM1LjE2ODA4MDkyNDg.*_ga_VED1YSGNC7*MTcyNzE4MTU0MC4yMS4xLjE3MjcxODE1NzEuMjkuMC4w&gatewayAdapt=glo2isr'
 
-    scrapper = AliExpressScrapper()
-    gifts_dbi = MongoDBInterface()
-    
-    RabbitMQReactor(scrapper, gifts_dbi).loop()
+    aliexpress_scrapper = AliExpressScrapper()
+    gifts_dbi = interfaces.GiftsMongoDBI()
+
+    GiftRequestsConsumerReactor(aliexpress_scrapper, gifts_dbi).loop()

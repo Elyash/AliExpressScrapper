@@ -14,6 +14,15 @@ class Gift:
     price: int | None
     email: str # The email of the user the gift belongs
 
+
+@dataclasses.dataclass
+class GiftRequest:
+    """Link for gift and the user's email."""
+
+    link: str | None
+    email: str # The email of the user the gift belongs
+
+
 @dataclasses.dataclass
 class User:
     """A user in the gift app."""
