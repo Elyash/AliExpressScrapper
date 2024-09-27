@@ -1,122 +1,47 @@
-{% extends "base.html" %} {% block title %}Home{% endblock %} {% block content
-%}
-<h1 align="center">My Gifts</h1>
-<form method="POST" style="background-color: #423f3f; padding: 40px; border-radius: 10px; box-shadow: 15px 15px rgba(52, 30, 30, 0.1);">
-  <h2 content="width=device-width, initial-scale=1.0" align="center" style="background-color: blue; color: #fff; border-radius: 5px;">Add a new gift</h2>
-  <input name="gift_name" type="text" id="gift_name" class="form-control" placeholder="Enter name" required></input>
-  <textarea name="gift_description" id="gift_description" class="form-control" placeholder="Enter description (Optional)"></textarea>
-  <input name="gift_image" type="url" id="gift_link" class="form-control" placeholder="Enter image link (Optional)"></input>
-  <input name="gift_price" type="number" id="gift_price" class="form-control" placeholder="Enter estimated price (Optional)" min="0.00" max="10000.00" step="0.01" />
-  <br />
-  <div align="center">
-    <button type="submit" class="btn btn-primary">Add Gift</button>
-  </div>
-</form>
-<div class="container">
-  <h1 class="title">Our Exclusive Gifts</h1>
-    <div class="gift-grid">
-      <!-- Example 10 gift cards -->
-      <div class="gift-card">
-          <img src="https://example.com/image1.jpg" alt="Luxury Watch" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Luxury Watch</h2>
-              <p class="gift-description">A stylish luxury watch that brings elegance to every occasion.</p>
-              <div class="gift-price">$299.99</div>
-          </div>
-      </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wish Gift List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="home-container">
+        <h1>Welcome to Your Gift List!</h1>
+        
+        <div class="gift-input-container">
+            <form method="POST" action="{{ url_for('home') }}">
+                <input type="text" name="gift_link" placeholder="Enter a gift link" required>
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </div>
 
-      <div class="gift-card">
-          <img src="https://example.com/image2.jpg" alt="Wireless Earbuds" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Wireless Earbuds</h2>
-              <p class="gift-description">High-quality sound in a compact, wireless design.</p>
-              <div class="gift-price">$99.99</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image3.jpg" alt="Smartphone" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Smartphone</h2>
-              <p class="gift-description">A sleek and powerful smartphone with an incredible camera.</p>
-              <div class="gift-price">$899.99</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image4.jpg" alt="Designer Handbag" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Designer Handbag</h2>
-              <p class="gift-description">Chic and stylish handbag from a renowned designer.</p>
-              <div class="gift-price">$1,200.00</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image5.jpg" alt="Gaming Laptop" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Gaming Laptop</h2>
-              <p class="gift-description">A powerful laptop for immersive gaming experiences.</p>
-              <div class="gift-price">$1,499.99</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image6.jpg" alt="Fitness Tracker" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Fitness Tracker</h2>
-              <p class="gift-description">Track your health and fitness with precision.</p>
-              <div class="gift-price">$79.99</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image7.jpg" alt="Instant Camera" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Instant Camera</h2>
-              <p class="gift-description">Capture memories instantly with this modern instant camera.</p>
-              <div class="gift-price">$149.99</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image8.jpg" alt="Electric Scooter" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Electric Scooter</h2>
-              <p class="gift-description">An eco-friendly, fun, and convenient way to commute.</p>
-              <div class="gift-price">$499.99</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image9.jpg" alt="4K TV" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">4K TV</h2>
-              <p class="gift-description">Experience ultra-high definition entertainment with this 4K TV.</p>
-              <div class="gift-price">$799.99</div>
-          </div>
-      </div>
-
-      <div class="gift-card">
-          <img src="https://example.com/image10.jpg" alt="Coffee Machine" class="gift-image">
-          <div class="gift-details">
-              <h2 class="gift-name">Coffee Machine</h2>
-              <p class="gift-description">Brew the perfect cup of coffee with this state-of-the-art machine.</p>
-              <div class="gift-price">$249.99</div>
-          </div>
-      </div>
+        <div class="gift-list">
+            {% for gift in user_gifts %}
+                <div class="gift-card">
+                    <img src="{{ gift['image_url'] }}" alt="{{ gift['name'] }}">
+                    <h2>{{ gift['name'] }}</h2>
+                    <p>Price: {{ gift['price'] }}</p>
+                    <a href="{{ gift['purchase_url'] }}" class="btn">View Gift</a>
+                    <button class="delete-btn" onclick="deleteGift('{{ gift['_id'] }}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
     </div>
-</div>
-<!---
-<ul class="list-group list-group-flush" id="gifts"></ul>
-  {% for gift in user.gifts %}
-  <li class="list-group-item">
-    {{ gift.name }}
-    <button type="button" class="close" onClick="deleteGift({{ gift.id }})">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </li>
-  {% endfor %}
-</ul>
--->
-{% endblock %}
+
+    <script>
+        function deleteGift(giftId) {
+            // Make AJAX call to delete the gift
+            fetch(`/delete_gift/${giftId}`, {
+                method: 'DELETE'
+            }).then(() => {
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
