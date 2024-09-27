@@ -6,8 +6,8 @@ import requests
 from flask import Blueprint, render_template, request, flash, jsonify
 from flask_login import login_required, current_user
 
-from ...Utils import models
-from .. import app
+from Utils import models
+from WebApp import app
 
 views = Blueprint('views', __name__)
 

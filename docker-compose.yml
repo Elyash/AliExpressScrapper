@@ -36,12 +36,32 @@ services:
 
   aliexpressscrapper:
     build:
-      context: ./AliExpressScrapper
+      context: .
+      dockerfile: AliExpressScrapper/Dockerfile
     container_name: aliexpressscrapper
     depends_on:
       - mongo
+      - rabbitmq
     ports:
-      - "7777:7777" # Just to be in the same netwoek
+      - "7777:7777" # Just to be in the same network
+    volumes:
+      - .:/app/MyFullstackProject
+    command: python -c "import time; time.sleep(200000)"
+
+  flaskwebapp:
+    build:
+      context: .
+      dockerfile: WebApp/Dockerfile
+    container_name: flaskwebapp
+    depends_on:
+      - mongo
+      - aliexpressscrapper
+      - rabbitmq
+    ports:
+      - "5000:5000" # Flask port
+    volumes:
+      - .:/app/MyFullstackProject
+    command: python -c "import time; time.sleep(200000)"
 
 volumes:
   mongo-data:

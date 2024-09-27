@@ -31,22 +31,21 @@ RUN wget -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapi
     rm /tmp/chromedriver_linux64.zip && \
     chmod +x /usr/local/bin/chromedriver
 
-# Install Selenium and ipython
-RUN pip install selenium webdriver-manager pymongo pika ipython
-
-# Set the project name
-ARG PROJECT_DIR="MyFullstackProject"
-
-# Set up the working directory
-WORKDIR /app/
-
 # Set environment variable to disable Chrome sandbox (needed when running in Docker)
 ENV CHROME_DRIVER_PATH=/usr/local/bin/chromedriver
 ENV DISPLAY=:99
 
-# Copy the scrapper code to container
-# COPY /home/elyash/MyFullstackProject /app/ # TODO: Add git clone if needed
+# Set the project name
+ARG PROJECT="MyFullstackProject"
+ARG PACKAGE="AliExpressScrapper"
 
-# Default command
-CMD ["python", "-c", "import time; time.sleep(10000)"]
-#CMD ["python", "-m", "MyFullstackProject.AliExpressScrapper.scrapper"]
+# Set up the working directory
+WORKDIR /app/${PROJECT}
+
+# Install python requirements
+COPY ${PACKAGE}/requirements.txt .
+RUN pip install -r requirements.txt
+RUN rm -rf requirements.txt
+
+# TODO: This dockerfile is for development.
+#       In the future we'll add deployment version so the code will be locally on the container.

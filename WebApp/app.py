@@ -1,25 +1,42 @@
-"""The main app module."""
+"""The main app module.
+It opens web page with login and sign-up options ->
+It stores the sign-up data in Users collection in MongoDB ->
+It sends the home page (upon sucessfull login) ->
+It fetches the user's gifts from MongoDB's Gift collection ->
+It shows the gifts ->
+It enable to add and remove gifts, as follow:
+    Add:
+        -> publish a gift_request to gift_requests_queue
+        -> consumes this gift_request from scrapped_gifts_queue
+        -> fetches the gift data from mongoDB's Gifts collection
+    Remove:
+        -> Delete the gift from mongoDB Gifts collection
+"""
 
-from flask_login import LoginManager
+import flask
+import flask_login
 
-from .website import views
-from .website import auth
+from WebApp.website import views, auth
 
-from ..Utils.interfaces import UsersMongoDBI, GiftsMongoDBI, GiftRequestsPubliserRabbitMQI
+from Utils.interfaces import UsersMongoDBI, GiftsMongoDBI, GiftRequestsPubliserRabbitMQI
 
 
 users_dbi = UsersMongoDBI()
 gifts_dbi = GiftsMongoDBI()
-gift_requests_publisher_rabbitmqi = GiftRequestsPubliserRabbitMQI()
+gift_requests_publisher = GiftRequestsPubliserRabbitMQI()
+# TODO: implement: scrapped_gifts_consumer = GiftRequestsConsumerRabbitMQI()
 
+app = flask.Flask(__name__)
 
 def create_app():
     """Create the main web app."""
 
-    app.register_blueprint(views, url_prefix='/')
-    app.register_blueprint(auth, url_prefix='/')
+    app.secret_key = 'super secret key'
 
-    login_manager = LoginManager()
+    app.register_blueprint(views.views, url_prefix='/')
+    app.register_blueprint(auth.auth, url_prefix='/')
+
+    login_manager = flask_login.LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
@@ -31,8 +48,7 @@ def create_app():
     return app
 
 
-app = create_app()
-
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    create_app()
+
+    app.run(debug=True, host='0.0.0.0')

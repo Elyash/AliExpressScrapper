@@ -1,5 +1,3 @@
 """Main package."""
 
-import website
-
-from . import app
+from . import website, app

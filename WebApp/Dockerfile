@@ -11,21 +11,18 @@ RUN apt-get update && apt-get install -y \
     vim \
     --no-install-recommends
 
-# Install Selenium and ipython
-RUN pip install \
-    pymongo \
-    pika \
-    ipython \
-    flask \
-    Flask-SQLAlchemy \
-    flask-login
+
+# Set the project name
+ARG PROJECT="MyFullstackProject"
+ARG PACKAGE="WebApp"
 
 # Set up the working directory
-WORKDIR /app
+WORKDIR /app/${PROJECT}
 
-# Copy the app code to container
-COPY ${HOME}/MyFullstackScrapper /app/
+# Install python requirements
+COPY ${PACKAGE}/requirements.txt .
+RUN pip install -r requirements.txt
+RUN rm -rf requirements.txt
 
-# Default command
-# TODO: run flask app
-CMD ["python", "./scrapper.py"]
+# TODO: This dockerfile is for development.
+#       In the future we'll add deployment version so the code will be locally on the container.
