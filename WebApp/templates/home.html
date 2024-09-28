@@ -23,15 +23,21 @@
             <div class="carousel">
                 <div class="gift-list">
                     {% for gift in user_gifts %}
-                        <div class="gift-card">
-                            <img src="{{ gift['gift_image'] }}" --alt="{{ gift['gift_image'] }}">
-                            <h2>{{ gift['name'] }}</h2>
-                            <p>Price: {{ gift['gift_price'] }}</p>
-                            <a href="{{ gift['link'] }}" class="view-gift-btn">View Gift</a>
-                            <button class="delete-btn" onclick="deleteGift('{{ gift['_id'] }}')">
+                        <div class="gift-card" onclick="handleGiftClink()">
+                            <img src="{{ gift['gift_image'] }}" class="gift-image">
+                            <div class="gift-details">
+                                <h3 class="gift-name">{{ gift['gift_name'] }}</h3>
+                                <p class="gift-price">{{ gift['gift_price'] }}</p>
+                            </div>
+                            <button class="delete-btn" onclick="deleteGift('{{ gift['_id'] }}')"></button>
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
+                        <script>
+                            function handleGiftClink() {
+                                window.open("{{ gift['link'] }}", "_blank")
+                            }
+                        </script>
                     {% endfor %}
                 </div>
             </div>
