@@ -3,36 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Wish Gift List</title>
+    <title>My Gifts App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="home-container">
-        <h1>Welcome to Your Gift List!</h1>
+        <h1>Welcome to Your Gifts!</h1>
         
         <div class="gift-input-container">
             <form method="POST" action="{{ url_for('home') }}">
-                <input type="text" name="gift_link" placeholder="Enter a gift link" required>
+                <input type="text" name="gift_link" placeholder="Enter a new gift link" required>
                 <button type="submit" class="btn">Submit</button>
             </form>
         </div>
-
-        <div class="gift-list">
-            {% for gift in user_gifts %}
-                <div class="gift-card">
-                    <img src="{{ gift['image_url'] }}" alt="{{ gift['name'] }}">
-                    <h2>{{ gift['name'] }}</h2>
-                    <p>Price: {{ gift['price'] }}</p>
-                    <a href="{{ gift['purchase_url'] }}" class="btn">View Gift</a>
-                    <button class="delete-btn" onclick="deleteGift('{{ gift['_id'] }}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
+        <h2>My Wish List</h2>
+        <div class="carousel-container">
+            <div class="arrow left-arrow" onclick="previousPane()">&#10094;</div>
+            <div class="carousel">
+                <div class="gift-list">
+                    {% for gift in user_gifts %}
+                        <div class="gift-card">
+                            <img src="{{ gift['gift_image'] }}" --alt="{{ gift['name'] }}">
+                            <h2>{{ gift['name'] }}</h2>
+                            <p>Price: {{ gift['price'] }}</p>
+                            <a href="{{ gift['purchase_url'] }}" class="btn">View Gift</a>
+                            <button class="delete-btn" onclick="deleteGift('{{ gift['_id'] }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
+            </div>
+            <div class="arrow right-arrow" onclick="nextPane()">&#10095;</div>
         </div>
-    </div>
+        <script>
+            let currentPane = 0;
 
+            function updateCarousel() {
+            const carousel = document.querySelector('.carousel');
+            const panes = document.querySelectorAll('.carousel-pane');
+            const totalPanes = panes.length;
+            
+            // Ensure the currentPane index is within bounds
+            if (currentPane < 0) {
+                currentPane = Math.floor(totalPanes / 3) - 1; // Move to last batch of 3 panes
+            } else if (currentPane >= Math.ceil(totalPanes / 3)) {
+                currentPane = 0; // Move to first batch
+            }
+
+            // Translate the carousel to the correct set of 3 panes
+            carousel.style.transform = `translateX(-${currentPane * 100}%)`;
+            }
+
+            function nextPane() {
+            currentPane++;
+            updateCarousel();
+            }
+
+            function previousPane() {
+            currentPane--;
+            updateCarousel();
+            }
+        </script>
+    </div>
     <script>
         function deleteGift(giftId) {
             // Make AJAX call to delete the gift
