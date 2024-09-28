@@ -24,10 +24,10 @@
                 <div class="gift-list">
                     {% for gift in user_gifts %}
                         <div class="gift-card">
-                            <img src="{{ gift['gift_image'] }}" --alt="{{ gift['name'] }}">
+                            <img src="{{ gift['gift_image'] }}" --alt="{{ gift['gift_image'] }}">
                             <h2>{{ gift['name'] }}</h2>
-                            <p>Price: {{ gift['price'] }}</p>
-                            <a href="{{ gift['purchase_url'] }}" class="btn">View Gift</a>
+                            <p>Price: {{ gift['gift_price'] }}</p>
+                            <a href="{{ gift['link'] }}" class="view-gift-btn">View Gift</a>
                             <button class="delete-btn" onclick="deleteGift('{{ gift['_id'] }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
