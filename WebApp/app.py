@@ -20,9 +20,9 @@ from wtforms import StringField, PasswordField
 from wtforms.validators import InputRequired, Email, Length
 from pymongo import MongoClient
 import pika
-from dataclasses import dataclass
 import json
-import os
+
+from Utils import models
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
@@ -48,16 +48,6 @@ connection = pika.BlockingConnection(connection_params)
 channel = connection.channel()
 channel.queue_declare(queue='gift_requests_queue')
 
-@dataclass
-class User:
-    name: str
-    email: str
-    password: str
-
-@dataclass
-class GiftRequest:
-    link: str
-    user_email: str
 
 class SignUpForm(FlaskForm):
     name = StringField('Name', validators=[InputRequired(), Length(min=3, max=50)])
@@ -99,7 +89,7 @@ def signup():
         if user:
             flash("Email already registered.", 'danger')
             return redirect(url_for('login'))
-        new_user = User(name=form.name.data, email=form.email.data, password=form.password.data)
+        new_user = models.User(name=form.name.data, email=form.email.data, password=form.password.data)
         add_user(new_user)
         session['email'] = new_user.email
         return redirect(url_for('home'))
@@ -124,7 +114,7 @@ def home():
     if request.method == 'POST':
         gift_link = request.form.get('gift_link')
         user_email = session['email']
-        gift_request = GiftRequest(link=gift_link, user_email=user_email)
+        gift_request = models.GiftRequest(link=gift_link, user_email=user_email)
 
         if get_gift(gift_request):
             flash("Gift already exists in your gifts.", 'danger')

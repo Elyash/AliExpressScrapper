@@ -17,6 +17,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
+from Utils import models
+
 
 # MongoDB setup
 mongo_client = MongoClient("mongodb", port=27017, username='admin', password='password')
@@ -48,21 +50,6 @@ channel = connection.channel()
 # Declare queues
 channel.queue_declare(queue='gift_requests_queue')
 channel.queue_declare(queue='gift_responses_queue')
-
-# Define the GiftRequest and Gift classes
-class GiftRequest:
-    def __init__(self, user_email, link):
-        self.user_email = user_email
-        self.link = link
-
-class Gift:
-    def __init__(self, user_email, link, gift_name, gift_price, gift_image):
-        self.user_email = user_email
-        self.link = link
-        self.gift_name = gift_name
-        self.gift_price = gift_price
-        self.gift_image = gift_image
-
 
 # Function to scrap gift details (implement this function)
 def scrap_gift(link):
@@ -109,14 +96,14 @@ def scrap_gift(link):
 # Callback function to process GiftRequest messages
 def process_gift_request(ch, method, properties, body):
     gift_request_data = json.loads(body)
-    gift_request = GiftRequest(user_email=gift_request_data['user_email'], link=gift_request_data['link'])
+    gift_request = models.GiftRequest(user_email=gift_request_data['user_email'], link=gift_request_data['link'])
     
     # Scrape gift details from the link
     logging.info('Got a new link to scrape: (link: %s)', gift_request.link)
     gift_details = scrap_gift(gift_request.link)
     
     # Create a Gift object with the scraped data
-    gift = Gift(
+    gift = models.Gift(
         user_email=gift_request.user_email,
         link=gift_request.link,
         gift_name=gift_details['gift_name'],

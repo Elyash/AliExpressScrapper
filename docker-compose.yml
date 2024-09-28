@@ -72,7 +72,8 @@ services:
       - .:/app/MyFullstackProject
     environment:
       - PYTHONDONTWRITEBYTECODE=1
-    command: python WebApp/app.py
+      - PYTHONPATH=$${PYTHONPATH}:.
+    command: python -m WebApp.app
 
 volumes:
   mongo-data:
