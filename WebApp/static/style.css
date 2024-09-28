@@ -125,6 +125,7 @@ a {
     display: flex;
     transition: transform 0.5s ease-in-out;
     width: calc(150%); /* Adjust width based on panes */
+    transform: translateX(0px);
 }
 
 .carousel-pane {
@@ -138,7 +139,7 @@ a {
 .gift-card {
     background-color: #4a91e25d;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
     justify-content: center; 
     align-items: center;
     border-radius: 10px;
@@ -212,7 +213,7 @@ a {
     transform: translateY(-50%);
     font-size: 24px;
     cursor: pointer;
-    background-color: rgba(71, 71, 80, 0.7); /* Blue color */
+    background-color: rgba(71, 71, 80, 0.888); /* Blue color */
     color: white;
     padding: 15px;
     border-radius: 50%;
@@ -220,14 +221,15 @@ a {
     display: block;
     justify-content: center;
     align-items: center;
+    z-index: 10;
 }
 
 .left-arrow {
-    left: 10px;
+    left: 0px;
 }
 
 .right-arrow {
-    right: 10px;
+    right: 0px;
 }
 
 .arrow:hover {

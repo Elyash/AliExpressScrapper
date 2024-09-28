@@ -19,7 +19,7 @@
         </div>
         <h2>My Wish List</h2>
         <div class="carousel-container">
-            <div class="arrow left-arrow" onclick="previousPane()">&#10094;</div>
+            <button class="arrow left-arrow" onclick="previousPane()">&#10094;</button>
             <div class="carousel">
                 <div class="gift-list">
                     {% for gift in user_gifts %}
@@ -41,37 +41,39 @@
                     {% endfor %}
                 </div>
             </div>
-            <div class="arrow right-arrow" onclick="nextPane()">&#10095;</div>
+            <button class="arrow right-arrow" onclick="nextPane()">&#10095;</button>
+            <script>
+                let currentPane = 0;
+    
+                function updateCarousel() {
+                    const carousel = document.querySelector('.carousel');
+                    const panes = document.querySelectorAll('.gift-card');
+                    const totalPanes = panes.length;
+                    
+                    // Ensure the currentPane index is within bounds
+                    if (currentPane < 0) {
+                        currentPane = totalPanes - 3; // Move to last batch of 3 panes
+                    } else if (currentPane >= totalPanes - 2) {
+                        currentPane = 0; // Move to first batch
+                    }
+    
+                    // Translate the carousel to the correct set of 3 panes
+                    console.log('update transform')
+                    console.log(currentPane)
+                    carousel.style.transform = `translateX(-${currentPane * 30}%)`;
+                }
+    
+                function nextPane() {
+                    currentPane++;
+                    updateCarousel();
+                }
+    
+                function previousPane() {
+                    currentPane--;
+                    updateCarousel();
+                }
+            </script>
         </div>
-        <script>
-            let currentPane = 0;
-
-            function updateCarousel() {
-            const carousel = document.querySelector('.carousel');
-            const panes = document.querySelectorAll('.carousel-pane');
-            const totalPanes = panes.length;
-            
-            // Ensure the currentPane index is within bounds
-            if (currentPane < 0) {
-                currentPane = Math.floor(totalPanes / 3) - 1; // Move to last batch of 3 panes
-            } else if (currentPane >= Math.ceil(totalPanes / 3)) {
-                currentPane = 0; // Move to first batch
-            }
-
-            // Translate the carousel to the correct set of 3 panes
-            carousel.style.transform = `translateX(-${currentPane * 100}%)`;
-            }
-
-            function nextPane() {
-            currentPane++;
-            updateCarousel();
-            }
-
-            function previousPane() {
-            currentPane--;
-            updateCarousel();
-            }
-        </script>
     </div>
     <script>
         function deleteGift(giftId) {
