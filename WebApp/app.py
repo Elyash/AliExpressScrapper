@@ -12,6 +12,7 @@ It enable to add and remove gifts, as follow:
     Remove:
         -> Delete the gift from mongoDB Gifts collection
 """
+import bson
 import time
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_wtf import FlaskForm
@@ -141,8 +142,8 @@ def logout():
 
 @app.route('/delete_gift/<gift_id>', methods=['DELETE'])
 def delete_gift(gift_id):
-    gifts_collection.delete_one({"_id": gift_id})
-    return '', 204
+    gifts_collection.delete_one({"_id": bson.ObjectId(gift_id)})
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

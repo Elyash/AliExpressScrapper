@@ -25,13 +25,22 @@
                                 <h3 class="gift-name">{{ gift['gift_name'] }}</h3>
                                 <p class="gift-price">{{ gift['gift_price'] }}</p>
                             </div>
-                            <button class="delete-btn" onclick="deleteGift('{{ gift['_id'] }}')"></button>
+                            <button class="delete-btn" onclick="deleteGift()"></button>
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                         <script>
                             function handleGiftClink() {
                                 window.open("{{ gift['link'] }}", "_blank")
+                            }
+                            function deleteGift() {
+                                const giftId = "{{ gift['_id'] }}";
+                                // Make AJAX call to delete the gift
+                                fetch(`/delete_gift/${giftId}`, {
+                                    method: 'DELETE'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
                             }
                         </script>
                     {% endfor %}
@@ -54,8 +63,6 @@
                     }
     
                     // Translate the carousel to the correct set of 3 panes
-                    console.log('update transform')
-                    console.log(currentPane)
                     carousel.style.transform = `translateX(-${currentPane * 30}%)`;
                 }
     
@@ -71,15 +78,5 @@
             </script>
         </div>
     </div>
-    <script>
-        function deleteGift(giftId) {
-            // Make AJAX call to delete the gift
-            fetch(`/delete_gift/${giftId}`, {
-                method: 'DELETE'
-            }).then(() => {
-                window.location.reload();
-            });
-        }
-    </script>
 
 {% endblock %}
