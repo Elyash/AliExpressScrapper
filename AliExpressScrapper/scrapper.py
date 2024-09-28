@@ -32,13 +32,15 @@ service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 
 # RabbitMQ setup
-time.sleep(10)
+time.sleep(8)
 connection_params = pika.ConnectionParameters(
     host='rabbitmq',
     port=5672,
     credentials=pika.PlainCredentials(
         username='user', password='password'
-    )
+    ),
+    heartbeat=60,
+    retry_delay=5
 )
 connection = pika.BlockingConnection(connection_params)
 channel = connection.channel()
@@ -95,8 +97,8 @@ def scrap_gift(link):
     # Extract the product main image, TODO: Extract all images.
     try:
         gift_details['gift_image'] = driver.find_element(
-            By.XPATH, "//img[@class='magnifier--image--EYYoSlr magnifier--zoom--RzRJGZg']"
-        ).get_attribute('src')
+            By.XPATH, "//div[@class='slider--img--K0YbWW2 slider--active--ETznpbf']"
+        ).find_element(By.TAG_NAME, 'img').get_attribute('src')
     except exceptions.InvalidSelectorException as e:
         print('Invalid class name:', e)
     except exceptions.NoSuchElementException as e:

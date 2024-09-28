@@ -34,14 +34,15 @@ users_collection = db['Users']
 gifts_collection = db['Gifts']
 
 # RabbitMQ setup
-time.sleep(10)
-time.sleep(10)
+time.sleep(8)
 connection_params = pika.ConnectionParameters(
     host='rabbitmq',
     port=5672,
     credentials=pika.PlainCredentials(
         username='user', password='password'
-    )
+    ),
+    heartbeat=60,
+    retry_delay=5
 )
 connection = pika.BlockingConnection(connection_params)
 channel = connection.channel()

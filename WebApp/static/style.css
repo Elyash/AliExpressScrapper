@@ -206,6 +206,37 @@ a {
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
+.delete-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #ff5f5fc5;
+    border: none;
+    color: rgba(0, 0, 0, 0.954);
+    padding: 15px 10px;
+    font-size: 1em;
+    cursor: pointer;
+    border-top-right-radius: 10px;  /* Matches the card's rounded corners */
+    box-shadow: none; /* Remove extra shadow */
+    transition: background-color 0.3s ease;
+    z-index: 1; /* Ensure it stays on top of the content */
+}
+
+/* .delete-btn {
+    background-color: #575757;
+    border: none;
+    cursor: pointer;
+    color: #e74c3c;
+}
+
+.delete-btn i {
+    font-size: 20px;
+}
+
+.delete-btn:hover i {
+    color: #c0392b;
+} */
+
 .gift-image {
   width: 100%;
   height: 50%;
@@ -238,22 +269,6 @@ a {
   .gift-card {
     width: 90%;
   }
-}
-
-.delete-btn {
-    background-color: #575757;
-    /* background-color: transparent; */
-    border: none;
-    cursor: pointer;
-    color: #e74c3c;
-}
-
-.delete-btn i {
-    font-size: 20px;
-}
-
-.delete-btn:hover i {
-    color: #c0392b;
 }
 
 .arrow {
