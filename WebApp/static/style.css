@@ -19,6 +19,54 @@ h2 {
     color: #264365;
 }
 
+/* Navigation bar */
+.navbar {
+    background-color: #333;
+    padding: 10px;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.navbar li {
+    float: left;
+}
+
+.navbar li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 20px;
+    text-decoration: none;
+}
+
+.navbar li a:hover {
+    background-color: #575757;
+}
+
+/* Flash messages */
+.flash-container {
+    margin: 20px;
+}
+
+.flash-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+/* Main content */
+.content {
+    margin: 20px;
+}
+
 /* Auth Pages (Sign-up and Login) */
 .auth-container {
     max-width: 400px;

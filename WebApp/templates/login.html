@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - My Wish Gift List</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+<!-- templates/home.html -->
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
     <div class="auth-container">
         <h1>Log In</h1>
         <form method="POST" action="{{ url_for('login') }}">
@@ -23,5 +21,5 @@
         </form>
         <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
     </div>
-</body>
-</html>
+
+{% endblock %}
