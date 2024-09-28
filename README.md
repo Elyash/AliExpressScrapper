@@ -14,6 +14,7 @@ A package to scrape products' data from AliExpress website.
 
 
 ## Future features:
-1. Make the GUI look nice: pane for new gift insertion, pane for my gifts (one line) and pane for others gifts(second line). align the gift link.
-2. Remvoe duplicated gifts (if the same user)
-3. Add link button of a gift.
+1. Make the GUI look nice: pane for new gift insertion, pane for my gifts (one line) and pane for others gifts(second line). align the gift link. - Done.
+2. Remvoe duplicated gifts (if the same user) - Done.
+3. show flash messages and menu.
+3. Add delete button to apps.

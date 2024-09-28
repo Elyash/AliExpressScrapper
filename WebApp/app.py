@@ -72,6 +72,11 @@ def get_user(email):
 def add_user(user):
     users_collection.insert_one(user.__dict__)
 
+def get_gift(gift_request):
+    return gifts_collection.find_one(
+        {"user_email": gift_request.user_email, "link": gift_request.link}
+    )
+
 def add_gift(gift):
     gifts_collection.insert_one(gift)
 
@@ -118,6 +123,11 @@ def home():
         gift_link = request.form.get('gift_link')
         user_email = session['email']
         gift_request = GiftRequest(link=gift_link, user_email=user_email)
+
+        if get_gift(gift_request):
+            flash("Gift already exists in your gifts.", 'danger')
+            return redirect(url_for('home'))
+
         publish_gift_request(gift_request)
         flash("Gift request submitted. Processing...", 'info')
 
