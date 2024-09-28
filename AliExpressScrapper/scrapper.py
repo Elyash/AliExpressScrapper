@@ -9,7 +9,6 @@ import logging
 import time
 import pika
 import json
-from pymongo import MongoClient
 from selenium import webdriver
 from selenium.common import exceptions
 from selenium.webdriver.chrome.service import Service
@@ -17,13 +16,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-from Utils import models
+from Utils import models, interfaces
 
-
-# MongoDB setup
-mongo_client = MongoClient("mongodb", port=27017, username='admin', password='password')
-db = mongo_client['MyFullstackProject']
-gifts_collection = db['Gifts']
 
 # Set up the WebDriver service
 options = Options()
@@ -33,23 +27,6 @@ options.add_argument('--disable-dev-shm-usage')
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 
-# RabbitMQ setup
-time.sleep(8)
-connection_params = pika.ConnectionParameters(
-    host='rabbitmq',
-    port=5672,
-    credentials=pika.PlainCredentials(
-        username='user', password='password'
-    ),
-    heartbeat=60,
-    retry_delay=5
-)
-connection = pika.BlockingConnection(connection_params)
-channel = connection.channel()
-
-# Declare queues
-channel.queue_declare(queue='gift_requests_queue')
-channel.queue_declare(queue='gift_responses_queue')
 
 # Function to scrap gift details (implement this function)
 def scrap_gift(link):
@@ -112,7 +89,7 @@ def process_gift_request(ch, method, properties, body):
     )
     
     # Store the Gift object in the MongoDB "Gifts" collection
-    gifts_collection.insert_one(gift.__dict__)
+    interfaces.mongo_dbi.gifts_collection.insert_one(gift.__dict__)
     print(f"Stored Gift in MongoDB: {gift.__dict__}")
     
     # Publish a GiftResponse message to the 'gift_responses_queue'
@@ -123,7 +100,7 @@ def process_gift_request(ch, method, properties, body):
         "gift_price": gift.gift_price,
         "gift_image": gift.gift_image
     }
-    channel.basic_publish(
+    interfaces.rabbitmq_dbi.channel.basic_publish(
         exchange='',
         routing_key='gift_responses_queue',
         body=json.dumps(gift_response)
@@ -131,7 +108,11 @@ def process_gift_request(ch, method, properties, body):
     print(f"Published GiftResponse to RabbitMQ: {gift_response}")
 
 # Consume messages from 'gift_requests_queue'
-channel.basic_consume(queue='gift_requests_queue', on_message_callback=process_gift_request, auto_ack=True)
+interfaces.rabbitmq_dbi.channel.basic_consume(
+    queue='gift_requests_queue',
+    on_message_callback=process_gift_request,
+    auto_ack=True
+)
 
 print('Waiting for GiftRequest messages...')
-channel.start_consuming()
+interfaces.rabbitmq_dbi.channel.start_consuming()

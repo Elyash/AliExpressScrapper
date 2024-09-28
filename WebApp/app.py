@@ -18,35 +18,13 @@ from flask import Flask, render_template, redirect, url_for, request, session, f
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import InputRequired, Email, Length
-from pymongo import MongoClient
 import pika
 import json
 
-from Utils import models
+from Utils import models, interfaces
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
-
-# MongoDB setup
-mongo_client = MongoClient("mongodb", port=27017, username='admin', password='password')
-db = mongo_client['MyFullstackProject']
-users_collection = db['Users']
-gifts_collection = db['Gifts']
-
-# RabbitMQ setup
-time.sleep(8)
-connection_params = pika.ConnectionParameters(
-    host='rabbitmq',
-    port=5672,
-    credentials=pika.PlainCredentials(
-        username='user', password='password'
-    ),
-    heartbeat=60,
-    retry_delay=5
-)
-connection = pika.BlockingConnection(connection_params)
-channel = connection.channel()
-channel.queue_declare(queue='gift_requests_queue')
 
 
 class SignUpForm(FlaskForm):
@@ -54,26 +32,11 @@ class SignUpForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), Email()])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=6)])
 
+
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), Email()])
     password = PasswordField('Password', validators=[InputRequired()])
 
-def get_user(email):
-    return users_collection.find_one({"email": email})
-
-def add_user(user):
-    users_collection.insert_one(user.__dict__)
-
-def get_gift(gift_request):
-    return gifts_collection.find_one(
-        {"user_email": gift_request.user_email, "link": gift_request.link}
-    )
-
-def add_gift(gift):
-    gifts_collection.insert_one(gift)
-
-def publish_gift_request(gift_request):
-    channel.basic_publish(exchange='', routing_key='gift_requests_queue', body=json.dumps(gift_request.__dict__))
 
 @app.route('/')
 def index():
@@ -85,12 +48,12 @@ def index():
 def signup():
     form = SignUpForm()
     if form.validate_on_submit():
-        user = get_user(form.email.data)
+        user = interfaces.mongo_dbi.get_user(form.email.data)
         if user:
             flash("Email already registered.", 'danger')
             return redirect(url_for('login'))
         new_user = models.User(name=form.name.data, email=form.email.data, password=form.password.data)
-        add_user(new_user)
+        interfaces.mongo_dbi.add_user(new_user)
         session['email'] = new_user.email
         return redirect(url_for('home'))
     return render_template('signup.html', form=form)
@@ -99,7 +62,7 @@ def signup():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = get_user(form.email.data)
+        user = interfaces.mongo_dbi.get_user(form.email.data)
         if user and user['password'] == form.password.data:
             session['email'] = user['email']
             return redirect(url_for('home'))
@@ -116,14 +79,14 @@ def home():
         user_email = session['email']
         gift_request = models.GiftRequest(link=gift_link, user_email=user_email)
 
-        if get_gift(gift_request):
+        if interfaces.mongo_dbi.get_gift(gift_request):
             flash("Gift already exists in your gifts.", 'danger')
             return redirect(url_for('home'))
 
-        publish_gift_request(gift_request)
+        interfaces.rabbitmq_dbi.publish_gift_request(gift_request)
         flash("Gift request submitted. Processing...", 'info')
 
-    user_gifts = list(gifts_collection.find({"user_email": session['email']}))
+    user_gifts = list(interfaces.mongo_dbi.gifts_collection.find({"user_email": session['email']}))
     return render_template('home.html', user_gifts=user_gifts)
 
 @app.route('/logout')
@@ -133,7 +96,7 @@ def logout():
 
 @app.route('/delete_gift/<gift_id>', methods=['DELETE'])
 def delete_gift(gift_id):
-    gifts_collection.delete_one({"_id": bson.ObjectId(gift_id)})
+    interfaces.mongo_dbi.gifts_collection.delete_one({"_id": bson.ObjectId(gift_id)})
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
