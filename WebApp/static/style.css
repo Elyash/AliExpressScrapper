@@ -157,7 +157,6 @@ a {
     justify-content: center;
 }
 
-
 .carousel-container {
     display: flex;
     align-items: center;
@@ -174,14 +173,6 @@ a {
     transition: transform 0.5s ease-in-out;
     width: calc(150%); /* Adjust width based on panes */
     transform: translateX(0px);
-}
-
-.carousel-pane {
-    width: 33.3333%; /* Show 3 panes at a time */
-    flex-shrink: 0;
-    text-align: center;
-    padding: 20px;
-    justify-content: center;
 }
 
 .gift-card {
@@ -206,8 +197,8 @@ a {
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
-.delete-btn {
-    position: absolute;
+.gift-card .delete-btn {
+    position: fixed;
     top: 0;
     right: 0;
     background-color: #ff5f5fc5;
@@ -222,20 +213,9 @@ a {
     z-index: 1; /* Ensure it stays on top of the content */
 }
 
-/* .delete-btn {
-    background-color: #575757;
-    border: none;
-    cursor: pointer;
-    color: #e74c3c;
+.gift-card .delete-btn:hover {
+    background-color: #c11818f3;
 }
-
-.delete-btn i {
-    font-size: 20px;
-}
-
-.delete-btn:hover i {
-    color: #c0392b;
-} */
 
 .gift-image {
   width: 100%;
@@ -264,13 +244,6 @@ a {
   font-weight: bold;
 }
 
-/* Responsive Styling */
-@media (max-width: 600px) {
-  .gift-card {
-    width: 90%;
-  }
-}
-
 .arrow {
     position: absolute;
     top: 50%;
@@ -285,7 +258,7 @@ a {
     display: block;
     justify-content: center;
     align-items: center;
-    z-index: 10;
+    z-index: 2;
 }
 
 .left-arrow {

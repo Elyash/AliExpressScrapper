@@ -21,8 +21,6 @@
                     {% for gift in user_gifts %}
                         <div class="gift-card" onclick="handleGiftClink()">
                             <button class="delete-btn" onclick="deleteGift(event)">X</button>
-                                <i class="fas fa-trash"></i>
-                            </button>
                             <img src="{{ gift['gift_image'] }}" class="gift-image">
                             <div class="gift-details">
                                 <h3 class="gift-name">{{ gift['gift_name'] }}</h3>
