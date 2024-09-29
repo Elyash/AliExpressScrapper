@@ -13,15 +13,14 @@ It enable to add and remove gifts, as follow:
         -> Delete the gift from mongoDB Gifts collection
 """
 import bson
-import time
+
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import InputRequired, Email, Length
-import pika
-import json
 
 from Utils import models, interfaces
+
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
@@ -63,8 +62,8 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = interfaces.mongo_dbi.get_user(form.email.data)
-        if user and user['password'] == form.password.data:
-            session['email'] = user['email']
+        if user and user.password == form.password.data:
+            session['email'] = user.email
             return redirect(url_for('home'))
         flash("Invalid email or password.", 'danger')
     return render_template('login.html', form=form)
@@ -77,16 +76,19 @@ def home():
     if request.method == 'POST':
         gift_link = request.form.get('gift_link')
         user_email = session['email']
-        gift_request = models.GiftRequest(link=gift_link, user_email=user_email)
 
-        if interfaces.mongo_dbi.get_gift(gift_request):
+        if interfaces.mongo_dbi.get_gift(user_email, gift_link):
             flash("Gift already exists in your gifts.", 'danger')
             return redirect(url_for('home'))
+        
+        new_gift = models.Gift(user_email=user_email, link=gift_link)
+        new_gift_id = interfaces.mongo_dbi.add_gift(new_gift).inserted_id
 
-        interfaces.rabbitmq_dbi.publish_gift_request(gift_request)
+        interfaces.rabbitmq_dbi.publish_scrape_gift_request(new_gift_id)
         flash("Gift request submitted. Processing...", 'info')
 
-    user_gifts = list(interfaces.mongo_dbi.gifts_collection.find({"user_email": session['email']}))
+    # Note: here we should pass the gifts with '_id' attributes to allow their deletion by id.
+    user_gifts = interfaces.mongo_dbi.get_user_gifts_as_dicts(session['email'])
     return render_template('home.html', user_gifts=user_gifts)
 
 @app.route('/logout')
@@ -96,7 +98,8 @@ def logout():
 
 @app.route('/delete_gift/<gift_id>', methods=['DELETE'])
 def delete_gift(gift_id):
-    interfaces.mongo_dbi.gifts_collection.delete_one({"_id": bson.ObjectId(gift_id)})
+    app.logger.warning(gift_id)
+    interfaces.mongo_dbi.delete_gift_by_id(bson.ObjectId(gift_id))
     return redirect(url_for('home'))
 
 if __name__ == '__main__':

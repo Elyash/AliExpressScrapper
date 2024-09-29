@@ -1,5 +1,8 @@
 """Project models."""
+
 import dataclasses
+
+import bson
 
 
 @dataclasses.dataclass
@@ -12,18 +15,11 @@ class User:
 
 
 @dataclasses.dataclass
-class GiftRequest:
-    """A gift scrapping request."""
-
-    link: str
-    user_email: str
-
-@dataclasses.dataclass
 class Gift:
     """A Gift (as saved at DB)."""
 
     user_email: str
     link: str
-    gift_name: str
-    gift_price: str
-    gift_image: str
+    gift_name: str | None = None
+    gift_price: str | None = None
+    gift_image: str | None = None

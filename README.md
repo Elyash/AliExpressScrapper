@@ -18,4 +18,7 @@ A package to scrape products' data from AliExpress website.
 2. Remvoe duplicated gifts (if the same user) - Done.
 3. show flash messages and menu. - Done.
 3. Add delete button to apps. - Done.
-4. Fixed duplicated bug.
+4. Fix duplicated bug. You need to add the gift (with missing details) to mongo db,
+    set loading animation and let the scrapper fill the missing details.
+5. pylint and order each package, and make them packge (add poetry).
+6. add mini-gpt to determine the name of the scrapping product.

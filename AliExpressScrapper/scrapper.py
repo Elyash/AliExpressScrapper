@@ -7,7 +7,7 @@ It sends back the GiftRequest to scrapped_gifts queue.
 
 import logging
 import time
-import pika
+import bson
 import json
 from selenium import webdriver
 from selenium.common import exceptions
@@ -72,40 +72,19 @@ def scrap_gift(link):
 
 # Callback function to process GiftRequest messages
 def process_gift_request(ch, method, properties, body):
-    gift_request_data = json.loads(body)
-    gift_request = models.GiftRequest(user_email=gift_request_data['user_email'], link=gift_request_data['link'])
-    
+    gift_id = bson.ObjectId(body)
+    gift = interfaces.mongo_dbi.get_gift_by_id(gift_id)
+
     # Scrape gift details from the link
-    logging.info('Got a new link to scrape: (link: %s)', gift_request.link)
-    gift_details = scrap_gift(gift_request.link)
+    logging.info('Got a new link to scrape: (link: %s)', gift.link)
+    gift_details = scrap_gift(gift.link)
     
-    # Create a Gift object with the scraped data
-    gift = models.Gift(
-        user_email=gift_request.user_email,
-        link=gift_request.link,
-        gift_name=gift_details['gift_name'],
-        gift_price=gift_details['gift_price'],
-        gift_image=gift_details['gift_image']
-    )
-    
-    # Store the Gift object in the MongoDB "Gifts" collection
-    interfaces.mongo_dbi.gifts_collection.insert_one(gift.__dict__)
-    print(f"Stored Gift in MongoDB: {gift.__dict__}")
+    # Update the Gift object with the scraped data
+    interfaces.mongo_dbi.update_gift(gift_id, **gift_details)
     
     # Publish a GiftResponse message to the 'gift_responses_queue'
-    gift_response = {
-        "user_email": gift.user_email,
-        "link": gift.link,
-        "gift_name": gift.gift_name,
-        "gift_price": gift.gift_price,
-        "gift_image": gift.gift_image
-    }
-    interfaces.rabbitmq_dbi.channel.basic_publish(
-        exchange='',
-        routing_key='gift_responses_queue',
-        body=json.dumps(gift_response)
-    )
-    print(f"Published GiftResponse to RabbitMQ: {gift_response}")
+    interfaces.rabbitmq_dbi.publish_scrape_gift_response(gift_id)
+
 
 # Consume messages from 'gift_requests_queue'
 interfaces.rabbitmq_dbi.channel.basic_consume(
